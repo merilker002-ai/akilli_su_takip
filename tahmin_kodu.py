@@ -1,24 +1,15 @@
-# Dosya Adı: tahmin_kodu.py
+# Dosya Adı: tahmin_kodu.py (TEMİZ BULUT SÜRÜMÜ)
 import pandas as pd
 from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
-import os
+import streamlit as st # Streamlit Cloud'da st.secrets kullanmak için zorunlu
 
 ROLLING_WINDOW = 7 
-
-# ❗ DÜZENLEYİN: Bu aboneden veri çekeceğiz.
 ABONE_ID = "ABONE_0001" 
 KOLEKSIYON_ADI = 'su_okumalar' 
-# ❗ DÜZENLEYİN: Service Account dosyasının adı
-SERVICE_ACCOUNT_FILE = 'akillisutakip-firebase-adminsdk-fbsvc-3de4b6982e.json' 
 
-
-# --- BAĞLANTIYI KUR ---
-# Uygulama daha önce başlatılmamışsa başlat
-# Dosya Adı: tahmin_kodu.py (GÜNCELLENMİŞ BULUT SÜRÜMÜ)
-# ... (Diğer importlar)
 
 # --- BAĞLANTIYI KUR (SECRETS ile) ---
 if not firebase_admin._apps:
@@ -27,25 +18,24 @@ if not firebase_admin._apps:
         cred = credentials.Certificate(st.secrets["firebase"]) 
         firebase_admin.initialize_app(cred)
     except Exception:
-        # Loglama yapamayız, ancak Streamlit Cloud bu hatayı yakalayacaktır
+        # Hata yakalama
         pass
-        
-# ... (Kodun geri kalanı aynı kalır)
         
 
 def tahmin_yap(abone_id=ABONE_ID):
     
-    # Eğer Firebase başlatılmadıysa (hatalı JSON dosyası vb.), tahmin yapma
+    # Eğer Firebase başlatılmadıysa (hatalı secrets), tahmin yapma
     if not firebase_admin._apps:
         return 0.0, 0.0, 0.0
         
     db = firestore.client()
     
+    # Kalan kodunuz aynı kalır
     try:
         # 1. Firestore'dan Veri Çekme (Sadece seçilen ABONE_ID için)
         docs = db.collection(KOLEKSIYON_ADI).where('abone_id', '==', abone_id).stream()
         
-        # Veriyi DataFrame'e dönüştürme
+        # ... (Geri kalan kodunuz)
         veri_listesi = []
         for doc in docs:
             veri = doc.to_dict()
