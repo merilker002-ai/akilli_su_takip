@@ -1,0 +1,5 @@
+# Dosya Adı: requirements.txt
+streamlit
+pandas
+firebase-admin
+google-cloud-firestore
