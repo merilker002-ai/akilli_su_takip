@@ -1,29 +1,20 @@
-# Dosya Adı: su_tahmin.py
+# Dosya Adı: su_tahmin.py (TEMİZ BULUT SÜRÜMÜ)
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
-import os
 from tahmin_kodu import tahmin_yap 
+import os # Streamlit'te kullanılmasa da tutulabilir
 
 st.set_page_config(layout="wide")
 st.title("💧 Akıllı Su Tüketimi İzleme ve Tahmin (Firebase)")
 
 KOLEKSIYON_ADI = 'su_okumalar' 
 ROLLING_WINDOW = 7 
-# ❗ DÜZENLEYİN: Service Account dosyasının adı
-SERVICE_ACCOUNT_FILE = 'akillisutakip-firebase-adminsdk-fbsvc-3de4b6982e.json' 
 ABONE_ID = "ABONE_0001" # Şimdilik sabit abone
 
-
-# --- BAĞLANTIYI KUR ---
-# Dosya Adı: su_tahmin.py (GÜNCELLENMİŞ BULUT SÜRÜMÜ)
-
-# ... (Diğer importlar)
-# SERVICE_ACCOUNT_FILE kaldırıldı
-# ABONE_ID = "ABONE_0001" 
 
 # --- BAĞLANTIYI KUR (SECRETS ile) ---
 if not firebase_admin._apps:
@@ -32,24 +23,24 @@ if not firebase_admin._apps:
         cred = credentials.Certificate(st.secrets["firebase"]) 
         firebase_admin.initialize_app(cred)
         
-    except Exception:
+    except Exception as e:
+        # Hata mesajı sadece secrets bağlantısı kurulamadığında görünecek
         st.error("🔴 KRİTİK HATA: Firebase bağlantısı kurulamadı. Lütfen Streamlit Secrets ayarlarınızı kontrol edin.")
         st.stop()
-
-
-# ... (Kodun geri kalanı aynı kalır)
 
 
 # --- VERİ YÜKLEME VE GRAFİK OLUŞTURMA ---
 db = firestore.client()
 veri_var_mi = False
 
+# Kalan kodunuz aynı kalır...
 try:
     # 1. Firestore'dan Veri Çekme
     docs = db.collection(KOLEKSIYON_ADI).where('abone_id', '==', ABONE_ID).stream()
     
     veri_listesi = []
     son_tarih = None
+    # ... (Geri kalan kodunuz)
     for doc in docs:
         veri = doc.to_dict()
         veri_listesi.append({
@@ -83,7 +74,7 @@ except Exception:
 # --- TAHMİN BÖLÜMÜ ---
 if veri_var_mi:
     gunluk_tahmin, haftalik_tahmin, aylik_tahmin = tahmin_yap(ABONE_ID)
-
+    # ... (Geri kalan kodunuz)
     col1, col2, col3 = st.columns(3)
 
     if gunluk_tahmin > 0.0:
