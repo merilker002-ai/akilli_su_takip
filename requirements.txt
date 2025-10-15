@@ -1,5 +1,4 @@
-# Dosya Adı: requirements.txt
 streamlit
 pandas
-firebase-admin
-google-cloud-firestore
+firebase-admin  # Kalsın, ancak kullanmayacağız
+pyrebase4       # YENİ EKLENECEK KÜTÜPHANE
