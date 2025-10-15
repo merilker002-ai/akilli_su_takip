@@ -1,13 +1,3 @@
 streamlit
 pandas
 requests
-# firebase-admin ve pyrebase4 artık zorunlu değil, isterseniz kaldırabilirsiniz.
-
-### Sonuç
-
-Bu yeni yaklaşım, Firebase yetkilendirme sorunlarını tamamen atlar. Lütfen:
-1.  **Firestore Kurallarını** yayınlayın (`allow read: if true`).
-2.  **`su_tahmin.py` ve `tahmin_kodu.py` dosyalarını yeni sürümlerle güncelleyin.**
-3.  Uygulamanızı yeniden başlatın.
-
-Bu sefer bağlantı sorunsuz bir şekilde kurulmalıdır!
