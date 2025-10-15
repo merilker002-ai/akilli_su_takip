@@ -17,18 +17,52 @@ ABONE_ID = "ABONE_0001" # Şimdilik sabit abone
 
 
 # --- SADECE BURADA BAĞLANTI KURULUR (SECRETS ile) ---
+# Dosya Adı: su_tahmin.py (YENİ ÇEVRESEL DEĞİŞKEN SÜRÜMÜ)
+import streamlit as st
+import pandas as pd
+from datetime import datetime
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+import os # YENİ EKLENDİ
+from tahmin_kodu import tahmin_yap 
+
+st.set_page_config(layout="wide")
+st.title("💧 Akıllı Su Tüketimi İzleme ve Tahmin (Firebase)")
+
+KOLEKSIYON_ADI = 'su_okumalar' 
+ROLLING_WINDOW = 7 
+ABONE_ID = "ABONE_0001" # Şimdilik sabit abone
+
+
+# --- BAĞLANTIYI KUR (Çevresel Değişkenler ile) ---
 if not firebase_admin._apps:
     try:
-        # Streamlit Cloud'da çalışırken gizli anahtarı secrets objesinden alır
-        cred = credentials.Certificate(st.secrets["firebase"]) 
+        # Çevresel değişkenlerden yapılandırma verisini okur
+        # private_key'deki \n karakterlerini geri eklemeyi UNUTMAYIN (Çok Önemli!)
+        firebase_config = {
+            "type": os.environ["FIREBASE_TYPE"],
+            "project_id": os.environ["FIREBASE_PROJECT_ID"],
+            "private_key_id": os.environ["FIREBASE_PRIVATE_KEY_ID"],
+            "private_key": os.environ["FIREBASE_PRIVATE_KEY"].replace('\\n', '\n'),
+            "client_email": os.environ["FIREBASE_CLIENT_EMAIL"],
+            "client_id": os.environ["FIREBASE_CLIENT_ID"],
+            "auth_uri": os.environ["FIREBASE_AUTH_URI"],
+            "token_uri": os.environ["FIREBASE_TOKEN_URI"],
+            "auth_provider_x509_cert_url": os.environ["FIREBASE_AUTH_PROVIDER_X509_CERT_URL"],
+            "client_x509_cert_url": os.environ["FIREBASE_CLIENT_X509_CERT_URL"],
+            "universe_domain": os.environ["FIREBASE_UNIVERSE_DOMAIN"]
+        }
+        
+        cred = credentials.Certificate(firebase_config) 
         firebase_admin.initialize_app(cred)
         
-    except Exception as e:
-        # Firebase'e bağlanamama hatası (Secrets sorunluysa)
-        st.error("🔴 KRİTİK HATA: Firebase bağlantısı kurulamadı. Lütfen Streamlit Secrets ayarlarınızı ve dosya formatını kontrol edin.")
-        # Hata mesajını konsola da yazdırabiliriz:
-        # st.exception(e) 
+    except Exception:
+        st.error("🔴 KRİTİK HATA: Firebase bağlantısı kurulamadı. Lütfen Streamlit Environment Variables ayarlarınızı kontrol edin.")
         st.stop()
+
+
+# ... (Kodun geri kalanı aynı kalır)
 
 
 # --- VERİ YÜKLEME VE GRAFİK OLUŞTURMA ---
@@ -95,4 +129,5 @@ if veri_var_mi:
         
     else:
         st.warning(f"⚠️ Tahmin yapmak için en az {ROLLING_WINDOW} günlük veri gerekiyor. Şu an {len(gunluk)} günlük veri var.")
+
 
