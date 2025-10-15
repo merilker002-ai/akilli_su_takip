@@ -1,44 +1,52 @@
-# Dosya Adı: tahmin_kodu.py (TEMİZLENMİŞ SÜRÜM)
+# Dosya Adı: tahmin_kodu.py (REST API ile UYUMLU SÜRÜM)
 import pandas as pd
-from datetime import datetime
-import numpy as np
-# Eski Firebase kütüphaneleri (firebase_admin, credentials, firestore, os) KALDIRILDI
+from datetime import datetime, timedelta
 
+# Ana uygulamadan gelen değişkenler
 ROLLING_WINDOW = 7 
-# ABONE_ID, KOLEKSIYON_ADI, SERVICE_ACCOUNT_FILE kaldırıldı
-
-# --- TAHMİN FONKSİYONU ---
 
 def tahmin_yap(df):
     """
-    Tüketim verisi DataFrame'ini alır (tarih ve tuketim sütunları olmalı) 
-    ve hareketli ortalamaya dayalı tahminler yapar.
+    Verilen DataFrame'den (günlük veya toplam) hareketli ortalama yöntemini kullanarak
+    bir sonraki gün, hafta ve ay için su tüketimi tahminleri yapar.
+    
+    Args:
+        df (pd.DataFrame): 'tarih' ve 'tuketim' sütunlarını içeren tüm ham veriyi içerir.
+        
+    Returns:
+        tuple: (gunluk_tahmin, haftalik_tahmin, aylik_tahmin)
     """
     
-    if df.empty or len(df["gun"].unique()) < ROLLING_WINDOW:
-        # En az ROLLING_WINDOW (7) günlük veri yoksa
+    if df.empty:
         return 0.0, 0.0, 0.0
 
-    # 1. Günlük Toplam Tüketimi Hesapla
-    # df["gun"] sütunu zaten su_tahmin.py'de oluşturuldu.
+    # 1. GÜNLÜK TOPLAM TÜKETİMİ HESAPLA
+    df["gun"] = df["tarih"].dt.date
     gunluk = df.groupby("gun")["tuketim"].sum().reset_index()
+    gunluk.columns = ['tarih', 'gunluk_tuketim']
     
-    # 2. Hareketli Ortalama Hesaplama (Rolling Average)
-    # Son 7 günlük ortalamayı bulur
-    gunluk['rolling_avg'] = gunluk['tuketim'].rolling(window=ROLLING_WINDOW, min_periods=ROLLING_WINDOW).mean()
+    # 2. YETERLİ VERİ KONTROLÜ
+    # Tahmin için en az ROLLING_WINDOW (7 gün) kadar veri olmalıdır.
+    if len(gunluk) < ROLLING_WINDOW:
+        # Yeterli veri yoksa sıfır döndür (su_tahmin.py bu durumu kontrol eder)
+        return 0.0, 0.0, 0.0
+
+    # 3. HAREKETLİ ORTALAMA HESAPLAMA
+    # Son 7 günün ortalamasını alarak temel tahmin değerini buluruz.
+    # .iloc[-1] son ortalamayı verir.
+    ortalama_gunluk_tuketim = gunluk['gunluk_tuketim'].tail(ROLLING_WINDOW).mean()
+
+    # 4. TAHMİNLERİ YAPMA
     
-    # Son hareketli ortalama değeri (Tahmin için kullanacağımız temel)
-    son_ort = gunluk['rolling_avg'].iloc[-1]
+    # a) Yarın Tahmini (Bir sonraki gün)
+    gunluk_tahmin = ortalama_gunluk_tuketim
     
-    # 3. Tahminleri Hesaplama
+    # b) Haftalık Tahmin (Önümüzdeki 7 günün toplamı)
+    # Basit bir model: Son 7 gün ortalamasını 7 ile çarp.
+    haftalik_tahmin = ortalama_gunluk_tuketim * 7
     
-    # a) Yarınlık Tahmin (Son Hareketli Ortalama)
-    gunluk_tahmin = son_ort
-    
-    # b) Haftalık Tahmin (7 günlük ortalama * 7 gün)
-    haftalik_tahmin = son_ort * 7
-    
-    # c) Aylık Tahmin (7 günlük ortalama * 30 gün)
-    aylik_tahmin = son_ort * 30
+    # c) Aylık Tahmin (Önümüzdeki 30 günün toplamı)
+    # Basit bir model: Son 7 gün ortalamasını 30 ile çarp.
+    aylik_tahmin = ortalama_gunluk_tuketim * 30
     
     return gunluk_tahmin, haftalik_tahmin, aylik_tahmin
