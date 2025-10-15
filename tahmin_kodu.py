@@ -1,36 +1,32 @@
-# Dosya Adı: tahmin_kodu.py (TEMİZ BULUT SÜRÜMÜ)
+# Dosya Adı: tahmin_kodu.py (GÜNCELLENMİŞ VE ST.SECRETS'I KALDIRILMIŞ SÜRÜM)
 import pandas as pd
 from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
-import streamlit as st # Streamlit Cloud'da st.secrets kullanmak için zorunlu
+# import streamlit as st # ARTIK GEREKSİZ, KALDIRILDI
 
 ROLLING_WINDOW = 7 
 ABONE_ID = "ABONE_0001" 
 KOLEKSIYON_ADI = 'su_okumalar' 
 
 
-# --- BAĞLANTIYI KUR (SECRETS ile) ---
-if not firebase_admin._apps:
-    try:
-        # Streamlit Cloud'da çalışırken gizli anahtarı secrets objesinden alır
-        cred = credentials.Certificate(st.secrets["firebase"]) 
-        firebase_admin.initialize_app(cred)
-    except Exception:
-        # Hata yakalama
-        pass
-        
+# --- BAĞLANTIYI KUR (st objesi DIŞARIDAN GELİR) ---
+# Bu kodun artık tahmin_kodu.py'da olmaması gerekiyor. 
+# Bağlantı, sadece su_tahmin.py'da bir kez yapılmalıdır.
+
 
 def tahmin_yap(abone_id=ABONE_ID):
+    # Fonksiyon, uygulamanın zaten başarılı bir şekilde Firebase'e bağlandığını varsayar.
     
-    # Eğer Firebase başlatılmadıysa (hatalı secrets), tahmin yapma
+    # Hata yakalama için sadece firebase_admin.apps kontrolü yeterli.
     if not firebase_admin._apps:
+        # Bu durumda bir hata oluştuğunu varsayarız.
         return 0.0, 0.0, 0.0
         
     db = firestore.client()
     
-    # Kalan kodunuz aynı kalır
+    # Kalan kodunuz aynı kalır...
     try:
         # 1. Firestore'dan Veri Çekme (Sadece seçilen ABONE_ID için)
         docs = db.collection(KOLEKSIYON_ADI).where('abone_id', '==', abone_id).stream()
